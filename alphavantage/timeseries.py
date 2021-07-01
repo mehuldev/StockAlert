@@ -1,6 +1,6 @@
 import csv
 import requests
-
+import sys
 
 class timeseries():
 	def __init__(self,api_key):
@@ -14,7 +14,12 @@ class timeseries():
 		currurl = self.url+'TIME_SERIES_INTRADAY_EXTENDED&symbol='
 		currurl = currurl+scrip+'&interval='+timeframe
 		currurl = currurl+'&slice='+duration+'&datatype=csv'
-		data = self.get_data(currurl)
+		try:
+			data = self.get_data(currurl)
+		except:
+			print("Error in receiving data")
+			sys.exit()
+
 		# print(currurl)
 		if(toprint):
 			self._print(data)

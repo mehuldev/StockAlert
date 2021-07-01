@@ -6,6 +6,7 @@ import csv
 import requests
 from pprint import pprint
 import math
+import sys
 
 class _config():
 	def __init__(self, api_key):
@@ -14,6 +15,9 @@ class _config():
 
 def find_support(data):
 	data = list(data)
+	if(len(data) < 2):
+		print("***Error in receiving data***")
+		sys.exit()
 	idx = {}
 	for i in range(len(data[0])):
 		idx[data[0][i]] = i
@@ -60,7 +64,7 @@ def find_support(data):
 		if(s > levels[i]):
 			del levels[i:j-1]
 			levels[i] = s/(j-i)
-			
+
 		i += 1
 	pp.reverse()
 	plt.plot([i for i in range(len(data)-2)],pp)
@@ -69,9 +73,8 @@ def find_support(data):
 	plt.show()
 
 def main():
-	# print("Enter API key:",end = ' ')
-	# api_key = input()
-	api_key = 'FZY90EMEKTOEJTOD'
+	print("Enter API key:",end = ' ')
+	api_key = input()
 	config = _config(api_key)
 	print("Enter scrip symbol:",end = ' ')
 	scrip = input()
