@@ -12,12 +12,8 @@ class _config():
 	def __init__(self, api_key):
 		self.api_key = api_key
 		
-
-def find_support(data):
+def find_levels(data):
 	data = list(data)
-	if(len(data) < 2):
-		print("***Error in receiving data***")
-		sys.exit()
 	idx = {}
 	for i in range(len(data[0])):
 		idx[data[0][i]] = i
@@ -27,8 +23,6 @@ def find_support(data):
 	plow = 0
 	ahigh = float(data[1][idx['high']])
 	alow = float(data[1][idx['low']])
-	# i = 0
-	# ii = []
 	pp = []
 	for row in data[2:]:
 		high = float(row[idx['high']])
@@ -63,24 +57,42 @@ def find_support(data):
 			j += 1
 		if(s > levels[i]):
 			del levels[i:j-1]
-			levels[i] = s/(j-i)
-
+			levels[i] = [s/(j-i),(j-i)/5]
+			if(levels[i][0]-alow <= tolerance*alow or ahigh-levels[i][0] <= tolerance*ahigh):
+				levels[i][1] += 3
+		else:
+			del levels[i:i+1]
+			i -= 1
 		i += 1
 	pp.reverse()
+	i = 0
+	tolerance = 0.007
+	while(len(levels) > 10 and i < len(levels)-1):
+		if(abs(levels[i][0]-levels[i+1][0]) < tolerance*levels[i][0]):
+			if(levels[i][1] > levels[i+1][1]):
+				levels.pop(i+1)
+			else:
+				levels.pop(i)
+		else:
+			i += 1
+
+	levels.sort(key = lambda x: x[1])
+	levels.reverse()
 	plt.plot([i for i in range(len(data)-2)],pp)
-	for j in levels:
-		plt.axhline(j, color = 'r',linestyle=':')
+	for j in levels[:min(len(levels),10)]:
+		plt.text(len(data),j[0],j[1])
+		plt.axhline(j[0],color = 'r',linestyle=':')
 	plt.show()
 
 def main():
-	print("Enter API key:",end = ' ')
+	print("Enter Alphavantage API key:",end = ' ')
 	api_key = input()
 	config = _config(api_key)
 	print("Enter scrip symbol:",end = ' ')
 	scrip = input()
 	scrip = scrip.upper()
 	ts = timeseries(api_key=api_key)
-	find_support(ts.intraday(scrip = scrip))
+	find_levels(ts.intraday(scrip = scrip))
 
 if __name__ == '__main__':
 	main()

@@ -14,10 +14,9 @@ class timeseries():
 		currurl = self.url+'TIME_SERIES_INTRADAY_EXTENDED&symbol='
 		currurl = currurl+scrip+'&interval='+timeframe
 		currurl = currurl+'&slice='+duration+'&datatype=csv'
-		try:
-			data = self.get_data(currurl)
-		except:
-			print("Error in receiving data")
+		data = self.get_data(currurl)
+		if(len(list(data)) < 2):
+			print("***Error in receiving data***")
 			sys.exit()
 
 		# print(currurl)
