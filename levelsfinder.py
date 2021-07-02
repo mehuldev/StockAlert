@@ -2,6 +2,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from alphavantage.timeseries import timeseries
+from alphavantage.technicalIndicators import technicalIndicators
+from alphavantage.alphavantage import alphavantage as av
 import csv
 import requests
 from pprint import pprint
@@ -12,8 +14,12 @@ class _config():
 	def __init__(self, api_key):
 		self.api_key = api_key
 		
-def find_levels(data):
-	data = list(data)
+def find_levels(scrip,ts,ti):
+	data = ts.intraday(scrip=scrip)
+	ema50 = ti.movingAverage(scrip=scrip,duration='50')[1]
+	ema200 = ti.movingAverage(scrip=scrip,duration='200')[1]
+	ema50 = float(ema50[1])
+	ema200 = float(ema200[1])
 	idx = {}
 	for i in range(len(data[0])):
 		idx[data[0][i]] = i
@@ -60,6 +66,11 @@ def find_levels(data):
 			levels[i] = [s/(j-i),(j-i)/5]
 			if(levels[i][0]-alow <= tolerance*alow or ahigh-levels[i][0] <= tolerance*ahigh):
 				levels[i][1] += 3
+			if(abs(levels[i][0]-ema50) <= tolerance*ema50):
+				levels[i][1] += 2
+			elif(abs(levels[i][0]-ema200) <= tolerance*ema200):
+				levels[i][1] += 4
+			levels[i][1] = min(levels[i][1],10)
 		else:
 			del levels[i:i+1]
 			i -= 1
@@ -91,8 +102,9 @@ def main():
 	print("Enter scrip symbol:",end = ' ')
 	scrip = input()
 	scrip = scrip.upper()
-	ts = timeseries(api_key=api_key)
-	find_levels(ts.intraday(scrip = scrip))
+	ti = technicalIndicators(api_key)
+	ts = timeseries(api_key)
+	find_levels(scrip,ts,ti)
 
 if __name__ == '__main__':
 	main()
