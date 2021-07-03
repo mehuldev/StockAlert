@@ -3,13 +3,14 @@ import sys
 from .alphavantage import alphavantage as av
 
 class timeseries(av):
-	def __init__(self,api_key):
-		av.__init__(self,api_key)
+	def __init__(self,api_key1):
+		av.__init__(self,api_key1=api_key1)
 
 	def intraday(self,scrip,timeframe='15min',duration='year1month1',toprint=False):
 		cExt = 'TIME_SERIES_INTRADAY_EXTENDED&symbol='
 		cExt = cExt+scrip+'&interval='+timeframe
 		cExt = cExt+'&slice='+duration+'&datatype=csv'
+		cExt += "&adjusted=false"
 		data = self.getData(cExt)
 		data = list(data)
 		assert(len(data) > 1), "***Error in receiving data***"

@@ -3,39 +3,45 @@ import matplotlib.pyplot as plt
 import numpy as np
 from alphavantage.timeseries import timeseries
 from alphavantage.technicalIndicators import technicalIndicators
-from alphavantage.alphavantage import alphavantage as av
 import csv
-import requests
-from pprint import pprint
 import math
 import sys
+import pandas as pd
 
 class _config():
 	def __init__(self, api_key):
 		self.api_key = api_key
-		
+	
 def find_levels(scrip,ts,ti):
-	data = ts.intraday(scrip=scrip)
-	ema50 = ti.movingAverage(scrip=scrip,duration='50')[1]
-	ema200 = ti.movingAverage(scrip=scrip,duration='200')[1]
-	ema50 = float(ema50[1])
-	ema200 = float(ema200[1])
+	data = ts.intraday(scrip=scrip, duration='year1month1')
+	data = data+ts.intraday(scrip=scrip,duration='year1month2')[1:]
 	idx = {}
 	for i in range(len(data[0])):
 		idx[data[0][i]] = i
 	tolerance = 0.00125
 	levels = []
+	#Previous High
 	phigh = 0
+	#Previous Low
 	plow = 0
+	#Absolute high
 	ahigh = float(data[1][idx['high']])
+	#Absolute low
 	alow = float(data[1][idx['low']])
 	pp = []
-	for row in data[2:]:
+	close15 = []
+	close60 = []
+	i = 1
+	for row in data[1:]:
 		high = float(row[idx['high']])
 		ahigh = max(high,ahigh)
 		pp.append(high)
 		low = float(row[idx['low']])
 		alow = min(alow,low)
+		close15.append(float(row[idx['close']]))
+		if(i%4 == 1):
+			close60.append(float(row[idx['close']]))
+		i += 1
 		if(phigh == 0):
 			phigh = high
 			plow = low
@@ -50,6 +56,12 @@ def find_levels(scrip,ts,ti):
 			levels.append(plow)
 		phigh = high
 		plow = low
+	close15 = pd.DataFrame({'A':close15[::-1]})
+	close60 = pd.DataFrame({'B':close60[::-1]})
+	ema50 = [close15.ewm(span=50).mean(),close60.ewm(span=50).mean()]
+	ema200 = [close15.ewm(span=200).mean(),close60.ewm(span=200).mean()]
+	ema50 = [list(ema50[0]['A'])[-1],list(ema50[1]['B'])[-1]]
+	ema200 = [list(ema200[0]['A'])[-1],list(ema200[1]['B'])[-1]]
 	levels.append(alow)
 	levels.append(ahigh)
 	levels.sort()
@@ -66,10 +78,11 @@ def find_levels(scrip,ts,ti):
 			levels[i] = [s/(j-i),(j-i)/5]
 			if(levels[i][0]-alow <= tolerance*alow or ahigh-levels[i][0] <= tolerance*ahigh):
 				levels[i][1] += 3
-			if(abs(levels[i][0]-ema50) <= tolerance*ema50):
-				levels[i][1] += 2
-			elif(abs(levels[i][0]-ema200) <= tolerance*ema200):
-				levels[i][1] += 4
+			for z in range(len(ema50)):
+				if(abs(levels[i][0]-ema50[z]) <= 0.5*tolerance*ema50[z]):
+					levels[i][1] += 0.5*z+1
+				elif(abs(levels[i][0]-ema200[z]) <= 0.5*tolerance*ema200[z]):
+					levels[i][1] += z+1
 			levels[i][1] = min(levels[i][1],10)
 		else:
 			del levels[i:i+1]
@@ -77,9 +90,10 @@ def find_levels(scrip,ts,ti):
 		i += 1
 	pp.reverse()
 	i = 0
-	tolerance = 0.007
-	while(len(levels) > 10 and i < len(levels)-1):
-		if(abs(levels[i][0]-levels[i+1][0]) < tolerance*levels[i][0]):
+	tolerance = 0.0015
+	print(len(levels))
+	while(i > 10 and i < len(levels)-1):
+		if(abs(levels[i][0]-levels[i+1][0]) <= tolerance*levels[i][0]):
 			if(levels[i][1] > levels[i+1][1]):
 				levels.pop(i+1)
 			else:
@@ -89,7 +103,7 @@ def find_levels(scrip,ts,ti):
 
 	levels.sort(key = lambda x: x[1])
 	levels.reverse()
-	plt.plot([i for i in range(len(data)-2)],pp)
+	plt.plot([i for i in range(len(data)-1)],pp)
 	for j in levels[:min(len(levels),10)]:
 		plt.text(len(data),j[0],j[1])
 		plt.axhline(j[0],color = 'r',linestyle=':')
@@ -102,8 +116,8 @@ def main():
 	print("Enter scrip symbol:",end = ' ')
 	scrip = input()
 	scrip = scrip.upper()
-	ti = technicalIndicators(api_key)
-	ts = timeseries(api_key)
+	ti = technicalIndicators(api_key1 = api_key)
+	ts = timeseries(api_key1 = api_key)
 	find_levels(scrip,ts,ti)
 
 if __name__ == '__main__':
