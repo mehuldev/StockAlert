@@ -62,6 +62,8 @@ def find_levels(scrip,ts,ti):
 	ema200 = [close15.ewm(span=200).mean(),close60.ewm(span=200).mean()]
 	ema50 = [list(ema50[0]['A'])[-1],list(ema50[1]['B'])[-1]]
 	ema200 = [list(ema200[0]['A'])[-1],list(ema200[1]['B'])[-1]]
+	ema50.append(float(ti.movingAverage(timeframe='daily',scrip=scrip,length='50')[1][1]))
+	ema200.append(float(ti.movingAverage(scrip=scrip,length='200',timeframe='daily')[1][1]))
 	levels.append(alow)
 	levels.append(ahigh)
 	levels.sort()
@@ -77,11 +79,11 @@ def find_levels(scrip,ts,ti):
 			del levels[i:j-1]
 			levels[i] = [s/(j-i),(j-i)/5]
 			if(levels[i][0]-alow <= tolerance*alow or ahigh-levels[i][0] <= tolerance*ahigh):
-				levels[i][1] += 3
+				levels[i][1] += 1
 			for z in range(len(ema50)):
-				if(abs(levels[i][0]-ema50[z]) <= 0.5*tolerance*ema50[z]):
+				if(abs(levels[i][0]-ema50[z]) <= tolerance*ema50[z]):
 					levels[i][1] += 0.5*z+1
-				elif(abs(levels[i][0]-ema200[z]) <= 0.5*tolerance*ema200[z]):
+				elif(abs(levels[i][0]-ema200[z]) <= tolerance*ema200[z]):
 					levels[i][1] += z+1
 			levels[i][1] = min(levels[i][1],10)
 		else:
@@ -90,8 +92,7 @@ def find_levels(scrip,ts,ti):
 		i += 1
 	pp.reverse()
 	i = 0
-	tolerance = 0.0015
-	print(len(levels))
+	tolerance = 0.005
 	while(i > 10 and i < len(levels)-1):
 		if(abs(levels[i][0]-levels[i+1][0]) <= tolerance*levels[i][0]):
 			if(levels[i][1] > levels[i+1][1]):
