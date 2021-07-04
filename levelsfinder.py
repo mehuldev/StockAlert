@@ -93,21 +93,23 @@ def find_levels(scrip,ts,ti):
 	pp.reverse()
 	i = 0
 	tolerance = 0.005
-	while(i > 10 and i < len(levels)-1):
+	while(len(levels) > 10 and i < len(levels)-1):
 		if(abs(levels[i][0]-levels[i+1][0]) <= tolerance*levels[i][0]):
 			if(levels[i][1] > levels[i+1][1]):
 				levels.pop(i+1)
 			else:
 				levels.pop(i)
-		else:
-			i += 1
-
+			i -= 1
+		levels[i] = [round(levels[i][0],2),round(levels[i][1],1)]
+		i += 1
 	levels.sort(key = lambda x: x[1])
 	levels.reverse()
 	plt.plot([i for i in range(len(data)-1)],pp)
+	print('Levels\tStrength')
 	for j in levels[:min(len(levels),10)]:
 		plt.text(len(data),j[0],j[1])
 		plt.axhline(j[0],color = 'r',linestyle=':')
+		print(j[0],'\t',j[1])
 	plt.show()
 
 def main():
