@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import matplotlib.pyplot as plt
-import numpy as np
 from alphavantage.timeseries import timeseries
 from alphavantage.technicalIndicators import technicalIndicators
 import csv
