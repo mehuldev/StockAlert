@@ -7,11 +7,12 @@ import math
 import sys
 import pandas as pd
 
-class _config():
-	def __init__(self, api_key):
-		self.api_key = api_key
-	
-def find_levels(scrip,ts,ti):
+def find_levels(scrip: str,api_key: str, showPlot: bool=False)->list:
+	# a = [1,2]
+	# return a
+	scrip.upper()
+	ti = technicalIndicators(api_key1 = api_key)
+	ts = timeseries(api_key1 = api_key)
 	data = ts.intraday(scrip=scrip, duration='year1month1')
 	data = data+ts.intraday(scrip=scrip,duration='year1month2')[1:]
 	idx = {}
@@ -89,7 +90,8 @@ def find_levels(scrip,ts,ti):
 			del levels[i:i+1]
 			i -= 1
 		i += 1
-	pp.reverse()
+	if(showPlot):
+		pp.reverse()
 	i = 0
 	tolerance = 0.005
 	while(len(levels) > 10 and i < len(levels)-1):
@@ -103,25 +105,13 @@ def find_levels(scrip,ts,ti):
 		i += 1
 	levels.sort(key = lambda x: x[1])
 	levels.reverse()
-	plt.plot([i for i in range(len(data)-1)],pp)
-	print('Levels\tStrength')
-	for j in levels[:min(len(levels),10)]:
-		plt.text(len(data),j[0],j[1])
-		plt.axhline(j[0],color = 'r',linestyle=':')
-		print(j[0],'\t',j[1])
-	plt.show()
+	if(showPlot):
+		plt.plot([i for i in range(len(data)-1)],pp)
+		for j in levels[:min(len(levels),10)]:
+			plt.text(len(data),j[0],j[1])
+			plt.axhline(j[0],color = 'r',linestyle=':')
+			# print(j[0],'\t',j[1])
+		plt.show()
+	return levels[:min(len(levels),10)]
 
-def main():
-	print("Enter Alphavantage API key:",end = ' ')
-	api_key = input()
-	config = _config(api_key)
-	print("Enter scrip symbol:",end = ' ')
-	scrip = input()
-	scrip = scrip.upper()
-	ti = technicalIndicators(api_key1 = api_key)
-	ts = timeseries(api_key1 = api_key)
-	find_levels(scrip,ts,ti)
-
-if __name__ == '__main__':
-	main()
 
