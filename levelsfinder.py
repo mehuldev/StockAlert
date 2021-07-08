@@ -8,8 +8,6 @@ import sys
 import pandas as pd
 
 def find_levels(scrip: str,api_key: str, showPlot: bool=False)->list:
-	# a = [1,2]
-	# return a
 	scrip.upper()
 	ti = technicalIndicators(api_key1 = api_key)
 	ts = timeseries(api_key1 = api_key)

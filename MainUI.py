@@ -19,7 +19,7 @@ class MainUI(Tk):
 		Entry(self.inputFrame,textvariable=self.api_key_var).grid(row=0,column=1)
 		Label(self.inputFrame,text='Scrip Symbol').grid(row=1,column=0,padx=5,pady=5)
 		Entry(self.inputFrame,textvariable=self.scrip_symbol_var).grid(row=1,column=1)
-		Checkbutton(self.inputFrame,text='Show Plot',variable=self.showPlot_var).grid(row=2,column=1)
+		Checkbutton(self.inputFrame,text='Show Chart',variable=self.showPlot_var).grid(row=2,column=1)
 		Button(self.inputFrame,text='Submit',command=self.submit).grid(row=2,column=2)
 	def submit(self):
 		api_key = self.api_key_var.get()
