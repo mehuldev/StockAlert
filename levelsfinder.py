@@ -7,7 +7,7 @@ import math
 import sys
 import pandas as pd
 
-def find_levels(scrip: str,api_key: str, showPlot: bool=False)->list:
+def find_levels(scrip: str,api_key: str, showPlot: bool=False)->dict:
 	scrip.upper()
 	ti = technicalIndicators(api_key1 = api_key)
 	ts = timeseries(api_key1 = api_key)
@@ -110,6 +110,8 @@ def find_levels(scrip: str,api_key: str, showPlot: bool=False)->list:
 			plt.axhline(j[0],color = 'r',linestyle=':')
 			# print(j[0],'\t',j[1])
 		plt.show()
-	return levels[:min(len(levels),10)]
+	return {'levels': levels[:min(len(levels),10)],
+			'ema50': ema50,
+			'ema200': ema200}
 
 
