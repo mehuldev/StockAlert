@@ -71,9 +71,8 @@ class apiKeysUI(Tk):
 				return
 			if(self.api_key_var[-1].get().find(' ') != -1):
 				return
-		temp = Entry(self.mainFrame)
-		temp.grid(row=self.idx,column=0,padx=2,pady=2)
-		self.api_key_var.append(temp)
+		self.api_key_var.append(Entry(self.mainFrame))
+		self.api_key_var[-1].grid(row=self.idx,column=0,padx=2,pady=2)
 		self.add_button.grid(row=self.idx,column=1)
 		self.submit_button.grid(row=self.idx+1,column=0)
 		self.idx += 1
@@ -89,13 +88,15 @@ class apiKeysUI(Tk):
 			self.destroy()
 
 class stockListUI(Tk):
-	def __init__(self):
+	def __init__(self,mydb):
 		Tk.__init__(self)
-		self.title("Stock Symbol Manager")
+		self.title("Stock List Manager")
 		self.geometry("500x500")
+		self.mydb = mydb
 		self.introFrame = Frame(self)
 		self.inputFrame = Frame(self)
-		# self.introFrame.grid(row=0,column=0,pady=10)
+		self.introFrame.grid(row=0,column=0,pady=10)
+		Label(self.introFrame,text="Enter Stock Symbols").grid(row=1,column=0)
 		self.inputFrame.grid(row=1,column=0)
 		self.stock_symbol_var = []
 		self.idx = 0
@@ -109,78 +110,16 @@ class stockListUI(Tk):
 				return
 			elif(self.stock_symbol_var[-1].get().find(' ') != -1):
 				return
-		temp = Entry(self.inputFrame)
-		temp.grid(row=self.idx,column=0,pady=2)
-		self.stock_symbol_var.append(temp)
-		self.add_button.grid(row=self.idx,column=1)
-		self.submit_button.grid(row=self.idx+1,column=0)
+		self.stock_symbol_var.append(Entry(self.inputFrame))
+		self.stock_symbol_var[-1].grid(row=self.idx,column=0,pady=2,padx=2)
+		self.add_button.grid(row=self.idx,column=1,padx=2)
+		self.submit_button.grid(row=self.idx+1,column=0,padx=2)
 		self.idx += 1
 
 	def submit(self):
-		mydb = None
-		mycursor = None
-		try:
-			mydb = mysql.connector.connect(
-				host='localhost',
-				user='mehul',
-				password='1234',
-				database='mydb')
-		except:
-			mydb = mysql.connector.connect(
-				host='localhost',
-				user='mehul',
-				password='1234')
-			mycursor = mydb.cursor()
-			mycursor.execute("CREATE DATABASE mydb")
-		mycursor = mydb.cursor()
-		mycursor.execute("SHOW TABLES")
-		tables = [x[0] for x in mycursor]
-		if('scrips' not in tables):
-			mycursor.execute("CREATE TABLE `scrips` \
-				(`Symbol` VARCHAR(255) NOT NULL,\
-					`Price` DECIMAL(5,3),\
-					PRIMARY KEY (`Symbol`)\
-				)")
-		if('levels' not in tables):
-			mycursor.execute("CREATE TABLE `levels` \
-				(`Symbol` VARCHAR(255) NOT NULL,\
-				FOREIGN KEY (`Symbol`) REFERENCES scrips(`Symbol`),\
-				`level` DECIMAL(5,3),\
-				`Strength` DECIMAL(2,1)\
-				)")
-		if('ema50' not in tables):
-			mycursor.execute("CREATE TABLE `ema50` \
-				(`Symbol` VARCHAR(255) NOT NULL,\
-				FOREIGN KEY (Symbol) REFERENCES scrips(Symbol),\
-				`15min` DECIMAL(5,3),\
-				 `60min` DECIMAL(5,3),\
-				  `daily` DECIMAL(5,3) \
-				)")
-		if('ema200' not in tables):
-			mycursor.execute("CREATE TABLE `ema200` \
-				(`Symbol` VARCHAR(255) NOT NULL,\
-				FOREIGN KEY (`Symbol`) REFERENCES scrips(`Symbol`),\
-				`15min` DECIMAL(5,3),\
-				 `60min` DECIMAL(5,3),\
-				  `daily` DECIMAL(5,3) \
-				)")
 		for x in self.stock_symbol_var:
 			symbol = str(x.get())
 			symbol = symbol.upper()
-			command = ("SELECT Symbol FROM scrips WHERE Symbol='{}'".format(symbol))
-			mycursor.execute(command)
-			l = 0
-			for x in mycursor:
-				if(x[0].upper() == symbol):
-					l += 1
-			if(l == 0):
-				command = ("INSERT INTO scrips (Symbol, Price) VALUES(%s,%s)")
-				entry = (symbol,'0.0')
-				mycursor.execute(command,entry)
-
-			else:
-				command = ("UPDATE scrips SET Symbol='{}' WHERE Symbol LIKE UPPER('%{}')".format(symbol,symbol))
-				mycursor.execute(command)
-			mydb.commit()
+			self.mydb.insertStock(symbol)
 
 

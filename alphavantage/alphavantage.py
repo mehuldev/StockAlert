@@ -11,7 +11,6 @@ class alphavantage(object):
 		self.cnt = 0
 
 	def getData(self,extension):
-		# print(self.av_url+extension)
 		reqUrl = ''
 		if(self.cnt < 5):
 			reqUrl = self.av_url+extension+"&apikey="+self.api_key1

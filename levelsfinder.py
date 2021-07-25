@@ -8,7 +8,7 @@ import sys
 import pandas as pd
 
 def find_levels(scrip: str,api_key: str, showPlot: bool=False)->dict:
-	scrip.upper()
+	scrip = scrip.upper()
 	ti = technicalIndicators(api_key1 = api_key)
 	ts = timeseries(api_key1 = api_key)
 	data = ts.intraday(scrip=scrip, duration='year1month1')
