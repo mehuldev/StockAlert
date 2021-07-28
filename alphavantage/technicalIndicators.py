@@ -3,8 +3,8 @@ import sys
 from .alphavantage import alphavantage as av
 
 class technicalIndicators(av):
-	def __init__(self,api_key1):
-		av.__init__(self,api_key1=api_key1)
+	def __init__(self,keyFile):
+		av.__init__(self,keyFile=keyFile)
 	def movingAverage(self,scrip = '',typ = 'ema',timeframe='15min',length='50',series_type='close',datatype='csv'):
 		typ = typ.upper()
 		scrip = scrip.upper()

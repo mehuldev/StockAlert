@@ -1,26 +1,24 @@
 import requests
 import sys
 import csv
+# import os
 
 class alphavantage(object):
-	def __init__(self,api_key1='',api_key2 = 'fdfkjfd',output_format='csv'):
-		assert(len(api_key1) > 0), "api_key cannot be empty"
-		self.api_key1 = api_key1
-		self.api_key2 = api_key2
+	def __init__(self,keyFile,output_format='csv'):
+		self.keyFile = keyFile
+		self.apiKeys = []
+		# os.path('../')
+		with open(self.keyFile,mode='r') as file:
+			csvFile = csv.reader(file)
+			for line in csvFile:
+				self.apiKeys.append(line[0])
+			file.close()
 		self.av_url = "https://www.alphavantage.co/query?function="
-		self.cnt = 0
 
 	def getData(self,extension):
 		reqUrl = ''
-		if(self.cnt < 5):
-			reqUrl = self.av_url+extension+"&apikey="+self.api_key1
-			self.cnt += 1
-		elif(self.cnt < 10):
-			reqUrl = self.av_url+extension+"&apikey="+self.api_key2
-			self.cnt += 1
-		else:
-			reqUrl = self.av_url+extension+"&apikey="+self.api_key1
-			self.cnt = 1
+		reqUrl = self.av_url+extension+"&apikey="+self.apiKeys[0][0]
+		self.apiKeys.append(self.apiKeys.pop(0))
 		with requests.Session() as s:
 			try:
 				download = s.get(reqUrl)
@@ -30,5 +28,3 @@ class alphavantage(object):
 			except:
 				print("***Error Sending Request***")
 				sys.exit()
-
-

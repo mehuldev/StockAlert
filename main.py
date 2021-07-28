@@ -7,17 +7,17 @@ from database import myDB
 
 def main():
 	keyFile = 'apiKeys.csv'
-	mydb = myDB()
+	mydb = myDB(keyFile=keyFile)
 	if(not os.path.exists(keyFile)):
 		apiKeysUIobj = apiKeysUI(keyFile)
 		apiKeysUIobj.mainloop()
-	mydb.mycursor.execute("SELECT COUNT(Symbol) FROM scrips")
-	for x in mydb.mycursor:
+	mydb.cursor.execute("SELECT COUNT(Symbol) FROM scrips")
+	for x in mydb.cursor:
 		if(x[0] == 0):
 			stockListUIobj = stockListUI(mydb)
 			stockListUIobj.mainloop()
 
-	MainUIobj = MainUI()
+	MainUIobj = MainUI(keyFile,mydb)
 	MainUIobj.mainloop()
 
 if __name__ == '__main__':

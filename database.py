@@ -1,9 +1,12 @@
 import mysql.connector
+from levelsfinder import *
 
 class myDB():
-	def __init__(self):
+	def __init__(self,keyFile):
 		self.mydb = None
-		self.mycursor = None
+		self.cursor = None
+		self.keyFile = keyFile
+		self.tables = ['scrips','levels','ema50','ema200']
 		self.validate_database()
 
 	def create_database(self):
@@ -11,41 +14,38 @@ class myDB():
 			host='localhost',
 			user='mehul',
 			password='1234')
-		self.mycursor = self,mydb.cursor()
-		self.mycursor.execute("CREATE DATABASE mydb")
+		self.cursor = self,mydb.cursor()
+		self.cursor.execute("CREATE DATABASE mydb")
 
 	def create_tables(self):
-		self.mycursor = self.mydb.cursor()
-		self.mycursor.execute("SHOW TABLES")
-		tables = [x[0] for x in self.mycursor]
+		self.cursor = self.mydb.cursor()
+		self.cursor.execute("SHOW TABLES")
+		tables = [x[0] for x in self.cursor]
 		if('scrips' not in tables):
-			self.mycursor.execute("CREATE TABLE `scrips` \
+			self.cursor.execute("CREATE TABLE `scrips` \
 				(`Symbol` VARCHAR(255) NOT NULL,\
-					`Price` DECIMAL(5,3),\
+					`Price` DECIMAL(19,2),\
 					PRIMARY KEY (`Symbol`)\
 				)")
 		if('levels' not in tables):
-			self.mycursor.execute("CREATE TABLE `levels` \
+			self.cursor.execute("CREATE TABLE `levels` \
 				(`Symbol` VARCHAR(255) NOT NULL,\
-				FOREIGN KEY (`Symbol`) REFERENCES scrips(`Symbol`),\
-				`level` DECIMAL(5,3),\
-				`Strength` DECIMAL(2,1)\
+				`Level` DECIMAL(19,2),\
+				`Strength` DECIMAL(19,1)\
 				)")
 		if('ema50' not in tables):
-			self.mycursor.execute("CREATE TABLE `ema50` \
+			self.cursor.execute("CREATE TABLE `ema50` \
 				(`Symbol` VARCHAR(255) NOT NULL,\
-				FOREIGN KEY (Symbol) REFERENCES scrips(Symbol),\
-				`15min` DECIMAL(5,3),\
-				 `60min` DECIMAL(5,3),\
-				  `daily` DECIMAL(5,3) \
+				`15min` DECIMAL(19,2),\
+				 `60min` DECIMAL(19,2),\
+				  `daily` DECIMAL(19,2) \
 				)")
 		if('ema200' not in tables):
-			self.mycursor.execute("CREATE TABLE `ema200` \
+			self.cursor.execute("CREATE TABLE `ema200` \
 				(`Symbol` VARCHAR(255) NOT NULL,\
-				FOREIGN KEY (`Symbol`) REFERENCES scrips(`Symbol`),\
-				`15min` DECIMAL(5,3),\
-				 `60min` DECIMAL(5,3),\
-				  `daily` DECIMAL(5,3) \
+				`15min` DECIMAL(19,2),\
+				 `60min` DECIMAL(19,2),\
+				  `daily` DECIMAL(19,2) \
 				)")
 
 	def validate_database(self):
@@ -61,17 +61,47 @@ class myDB():
 
 	def insertStock(self,symbol: str):
 		command = ("SELECT Symbol FROM scrips WHERE Symbol='{}'".format(symbol))
-		self.mycursor.execute(command)
+		self.cursor.execute(command)
 		l = 0
-		for x in self.mycursor:
+		for x in self.cursor:
 			if(x[0].upper() == symbol):
 				l += 1
 		if(l == 0):
 			command = ("INSERT INTO scrips (Symbol, Price) VALUES(%s,%s)")
 			entry = (symbol,'0.0')
-			self.mycursor.execute(command,entry)
+			self.cursor.execute(command,entry)
 
 		else:
 			command = ("UPDATE scrips SET Symbol='{}' WHERE Symbol LIKE UPPER('%{}')".format(symbol,symbol))
-			self.mycursor.execute(command)
+			self.cursor.execute(command)
 		self.mydb.commit()
+
+	def stockList(self) -> list: 
+		self.cursor.execute("SELECT Symbol FROM scrips")		
+		return [x[0] for x in self.cursor]
+
+	def updateLevels(self, symbol: str):
+		data = find_levels(scrip=symbol,keyFile=self.keyFile)
+		for table in self.tables[1:]:
+			command = "DELETE FROM {} WHERE Symbol='{}'".format(table,symbol)
+			self.cursor.execute(command)
+			if(table == 'levels'):
+				command = "INSERT INTO levels(Symbol, Level, Strength) VALUES (%s,%s,%s)"
+				val = [(symbol,x,y) for x,y in data[table]]
+			else:
+				command = "INSERT INTO {}(Symbol,15min,60min,daily) VALUES (%s,%s,%s,%s)".format(table)
+				val = [(symbol,data[table][0],data[table][1],data[table][2])]
+			self.cursor.executemany(command,val)
+		self.mydb.commit()
+
+	def getLatestData(self, symbol: str):
+		command = "SELECT COUNT(Symbol) from levels WHERE Symbol='{}'".format(symbol)
+		self.cursor.execute(command)
+		for x in self.cursor:
+			if(x[0] == 0):
+				self.updateLevels(scrip=symbol)
+		data = current_price(scrip=symbol,keyFile=self.keyFile)
+		command = "UPDATE scrips SET Price='{}' WHERE Symbol='{}'".format(data,symbol)
+		self.cursor.execute(command)
+		self.mydb.commit()
+		return data

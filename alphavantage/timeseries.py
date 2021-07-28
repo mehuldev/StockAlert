@@ -3,11 +3,14 @@ import sys
 from .alphavantage import alphavantage as av
 
 class timeseries(av):
-	def __init__(self,api_key1):
-		av.__init__(self,api_key1=api_key1)
+	def __init__(self,keyFile):
+		av.__init__(self,keyFile=keyFile)
 
 	def intraday(self,scrip,timeframe='15min',duration='year1month1',toprint=False):
-		cExt = 'TIME_SERIES_INTRADAY_EXTENDED&symbol='
+		if(timeframe == '1min'):
+			cExt = 'TIME_SERIES_INTRADAY'
+		cExt = 'TIME_SERIES_INTRADAY_EXTENDED'
+		cExt = cExt+'&symbol='
 		cExt = cExt+scrip+'&interval='+timeframe
 		cExt = cExt+'&slice='+duration+'&datatype=csv'
 		cExt += "&adjusted=false"

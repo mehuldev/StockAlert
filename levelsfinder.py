@@ -7,10 +7,10 @@ import math
 import sys
 import pandas as pd
 
-def find_levels(scrip: str,api_key: str, showPlot: bool=False)->dict:
+def find_levels(scrip: str,keyFile: str, showPlot: bool=False)->dict:
 	scrip = scrip.upper()
-	ti = technicalIndicators(api_key1 = api_key)
-	ts = timeseries(api_key1 = api_key)
+	ti = technicalIndicators(keyFile = keyFile)
+	ts = timeseries(keyFile = keyFile)
 	data = ts.intraday(scrip=scrip, duration='year1month1')
 	data = data+ts.intraday(scrip=scrip,duration='year1month2')[1:]
 	idx = {}
@@ -110,8 +110,21 @@ def find_levels(scrip: str,api_key: str, showPlot: bool=False)->dict:
 			plt.axhline(j[0],color = 'r',linestyle=':')
 			# print(j[0],'\t',j[1])
 		plt.show()
+	for i in range(len(ema50)):
+		ema50[i] = round(ema50[i],2)
+		ema200[i] = round(ema200[i],2)
 	return {'levels': levels[:min(len(levels),10)],
 			'ema50': ema50,
-			'ema200': ema200}
+			'ema200': ema200
+			}
 
+def current_price(scrip: str, keyFile: str) -> float:
+	scrip = scrip.upper()
+	ts = timeseries(keyFile=keyFile)
+	data = ts.intraday(scrip=scrip, timeframe='1min')
+	idx = {}
+	for i in range(len(data[0])):
+		idx[data[0][i]] = i
+
+	return float(data[1][idx['close']])
 
