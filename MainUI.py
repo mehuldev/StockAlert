@@ -7,6 +7,7 @@ import os.path
 from PIL import ImageTk,Image
 import mysql.connector
 import threading
+import concurrent.futures
 
 class MainUI(Tk):
 	def __init__(self,keyFile,mydb):
@@ -35,10 +36,8 @@ class MainUI(Tk):
 		# Button(self.inputFrame,text='Submit',command=self.submit).grid(row=2,column=2)
 
 	def process(self):
-		self.stockList = self.mydb.stockList()
-		for x in self.stockList:
-			print(self.mydb.getLatestData(x))
-
+		data = self.mydb.get_latest_data_all()
+		print(data)
 
 	def apiKeysUI(self):
 		apiKeysUIobj = apiKeysUI(self.keyFile)

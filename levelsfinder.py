@@ -6,16 +6,18 @@ import csv
 import math
 import sys
 import pandas as pd
+import concurrent.futures
 
 def find_levels(scrip: str,keyFile: str, showPlot: bool=False)->dict:
 	scrip = scrip.upper()
 	ti = technicalIndicators(keyFile = keyFile)
 	ts = timeseries(keyFile = keyFile)
-	data = ts.intraday(scrip=scrip, duration='year1month1')
-	data = data+ts.intraday(scrip=scrip,duration='year1month2')[1:]
+	data = ts.intraday_single(scrip=scrip, duration='year1month1')
+	data = data+ts.intraday_single(scrip=scrip,duration='year1month2')[1:]
 	idx = {}
 	for i in range(len(data[0])):
 		idx[data[0][i]] = i
+	print(idx)
 	tolerance = 0.00125
 	levels = []
 	#Previous High
@@ -118,13 +120,18 @@ def find_levels(scrip: str,keyFile: str, showPlot: bool=False)->dict:
 			'ema200': ema200
 			}
 
-def current_price(scrip: str, keyFile: str) -> float:
-	scrip = scrip.upper()
+def current_price(stockList: list, keyFile: str):
 	ts = timeseries(keyFile=keyFile)
-	data = ts.intraday(scrip=scrip, timeframe='1min')
-	idx = {}
-	for i in range(len(data[0])):
-		idx[data[0][i]] = i
-
-	return float(data[1][idx['close']])
+	results = {}
+	with concurrent.futures.ThreadPoolExecutor() as executor:
+		temp = {}
+		for scrip in stockList:
+			scrip = scrip.upper()
+		temp = {executor.submit(ts.intraday_single,scrip,'1min'): scrip for scrip in stockList}
+		idx = {}
+		for future in concurrent.futures.as_completed(temp):
+			scrip = temp[future]
+			data = future.result()
+			results[scrip] = float(data[1][4])
+	return results
 

@@ -17,7 +17,7 @@ class alphavantage(object):
 
 	def getData(self,extension):
 		reqUrl = ''
-		reqUrl = self.av_url+extension+"&apikey="+self.apiKeys[0][0]
+		reqUrl = self.av_url+extension+"&apikey="+self.apiKeys[0]
 		self.apiKeys.append(self.apiKeys.pop(0))
 		with requests.Session() as s:
 			try:
